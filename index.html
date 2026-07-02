@@ -2,259 +2,59 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Undertale Multiplayer: Sans vs Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULB: Sans vs Frisk - Online</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
         body {
-            background-color: black;
-            color: white;
-            font-family: 'Press Start 2P', cursive;
-            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
         }
-        canvas {
-            border: 4px solid white;
-            background-color: black;
-            box-shadow: 0 0 10px white;
-        }
-        #enemy-panel {
-            display: none;
-            border: 2px solid white;
-            padding: 15px;
+        #gameCanvas {
+            border: 4px solid #fff;
+            background-color: #000;
+            image-rendering: pixelated; /* Mantém a vibe retro/pixel art */
             margin-top: 20px;
+        }
+        .ui-panel {
+            border: 2px solid #fff;
+            padding: 15px;
+            margin-bottom: 20px;
             width: 600px;
         }
-        .controls-list { font-size: 10px; line-height: 1.5; }
-        .buttons-container {
-            display: none;
-            width: 640px;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .ut-btn {
-            border: 2px solid #ff9900;
-            color: #ff9900;
-            padding: 10px 20px;
-            background: black;
+        button, input {
+            background: #000;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 5px 10px;
             font-family: inherit;
             cursor: pointer;
         }
-        .ut-btn:hover { background: #ff9900; color: black; }
+        button:hover { background: #fff; color: #000; }
     </style>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <h2 id="role-title">Carregando...</h2>
-    
+    <div class="ui-panel">
+        <h2>Painel de Conexão (P2P)</h2>
+        <p>Seu ID: <span id="my-id" style="color: #ffff00;">Gerando...</span></p>
+        
+        <div>
+            <label>Conectar ao ID do amigo:</label>
+            <input type="text" id="friend-id" placeholder="Cole o ID aqui">
+            <button onclick="connectToPeer()">Conectar (Jogar como Frisk)</button>
+        </div>
+        <p id="status" style="color: #00ff00; margin-top: 10px;">Status: Aguardando conexão...</p>
+    </div>
+
     <canvas id="gameCanvas" width="640" height="480"></canvas>
 
-    <div class="buttons-container" id="player-buttons">
-        <button class="ut-btn">FIGHT</button>
-        <button class="ut-btn">ACT</button>
-        <button class="ut-btn">ITEM</button>
-        <button class="ut-btn">MERCY</button>
-    </div>
-
-    <div id="enemy-panel">
-        <h3>Painel do Mestre (SANS)</h3>
-        <label>Tempo do Ataque (s): <input type="number" id="atk-time" value="15"></label>
-        <br><br>
-        <div class="controls-list">
-            **Ataques Leves:** W, A, S, D<br>
-            **Gravidade (Alma Azul):** F, G<br>
-            **Combo Aleatório:** T<br>
-            **Gravidade + Osso Direcional:** Setas (Cima, Baixo, Esq, Dir)<br>
-            **Ataque Especial:** H<br>
-            **Turno Infinito (Dormir):** J (Aperte J de novo para acordar/desviar)
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Identificando o papel via URL (?role=player ou ?role=sans)
-        const urlParams = new URLSearchParams(window.location.search);
-        const role = urlParams.get('role') || 'spectator';
-        
-        document.getElementById('role-title').innerText = role === 'player' ? 'Você é a ALMA' : (role === 'sans' ? 'Você é o SANS' : 'Espectador');
-
-        // Configuração da UI baseada no papel
-        if (role === 'sans') {
-            document.getElementById('enemy-panel').style.display = 'block';
-        }
-
-        // Variáveis de Jogo
-        let gameState = { turn: 'enemy' };
-        let soul = { x: 320, y: 320, size: 16, color: 'red', speed: 4, isBlue: false, gravity: 'down', velocityY: 0 };
-        let box = { x: 220, y: 240, width: 200, height: 200 }; // Caixa de batalha
-        let projectiles = [];
-        let keys = {};
-
-        // Listeners de teclado geral
-        window.addEventListener('keydown', (e) => keys[e.key] = true);
-        window.addEventListener('keyup', (e) => keys[e.key] = false);
-
-        // --- CONTROLES DO INIMIGO (SANS) ---
-        if (role === 'sans') {
-            window.addEventListener('keydown', (e) => {
-                if (gameState.turn !== 'enemy' && gameState.turn !== 'infinite_sleep') return;
-
-                let attackTriggered = null;
-                switch(e.key.toLowerCase()) {
-                    case 'w': attackTriggered = { type: 'bone_light', dir: 'up' }; break;
-                    case 's': attackTriggered = { type: 'bone_light', dir: 'down' }; break;
-                    case 'a': attackTriggered = { type: 'bone_light', dir: 'left' }; break;
-                    case 'd': attackTriggered = { type: 'bone_light', dir: 'right' }; break;
-                    case 'f': attackTriggered = { type: 'gravity', dir: 'down' }; break;
-                    case 'g': attackTriggered = { type: 'gravity', dir: 'up' }; break;
-                    case 't': attackTriggered = { type: 'random_combo' }; break;
-                    case 'h': attackTriggered = { type: 'special_attack' }; break;
-                    case 'j': 
-                        if (gameState.turn === 'infinite_sleep') {
-                            attackTriggered = { type: 'wake_up' }; // Acorda e desvia (fim do turno)
-                        } else {
-                            attackTriggered = { type: 'sleep_turn' }; // Começa o turno infinito
-                        }
-                        break;
-                    case 'arrowup': attackTriggered = { type: 'grav_bone', dir: 'up' }; break;
-                    case 'arrowdown': attackTriggered = { type: 'grav_bone', dir: 'down' }; break;
-                    case 'arrowleft': attackTriggered = { type: 'grav_bone', dir: 'left' }; break;
-                    case 'arrowright': attackTriggered = { type: 'grav_bone', dir: 'right' }; break;
-                }
-
-                if (attackTriggered) {
-                    socket.emit('enemyAttack', attackTriggered);
-                }
-            });
-        }
-
-        // --- LÓGICA DE REDE (SOCKET.IO) ---
-        socket.on('stateChange', (newTurn) => {
-            gameState.turn = newTurn;
-            if (newTurn === 'player' && role === 'player') {
-                document.getElementById('player-buttons').style.display = 'flex';
-                // O jogador empurra a caixa aqui (Lógica de expansão da caixa de batalha)
-                box = { x: 50, y: 240, width: 540, height: 150 }; 
-            } else if (newTurn === 'enemy') {
-                document.getElementById('player-buttons').style.display = 'none';
-                box = { x: 220, y: 240, width: 200, height: 200 }; // Retorna ao normal
-            }
-        });
-
-        socket.on('gravityChange', (data) => {
-            soul.isBlue = true;
-            soul.color = 'blue';
-            soul.gravity = data.dir;
-            soul.velocityY = 0; // Reseta o pulo
-        });
-
-        socket.on('spawnProjectile', (data) => {
-            // Instancia os ossos na tela baseado no comando do inimigo
-            let bone = { x: 0, y: 0, w: 10, h: 50, speedX: 0, speedY: 0 };
-            if (data.dir === 'up') { bone.x = 320; bone.y = 480; bone.speedY = -5; bone.w = 60; bone.h = 10;}
-            // (Adicionar lógica vetorial completa para W,A,S,D e Setas)
-            projectiles.push(bone);
-        });
-
-        socket.on('updateSoul', (data) => {
-            if (role === 'sans' || role === 'spectator') {
-                soul.x = data.x;
-                soul.y = data.y;
-            }
-        });
-
-        // --- GAME LOOP E FÍSICA ---
-        function update() {
-            // Lógica exclusiva do Jogador (Movimento da Alma)
-            if (role === 'player') {
-                let moved = false;
-
-                if (soul.isBlue) {
-                    // Física simplificada de Alma Azul (Plataforma)
-                    if (keys['ArrowLeft']) { soul.x -= soul.speed; moved = true; }
-                    if (keys['ArrowRight']) { soul.x += soul.speed; moved = true; }
-                    
-                    // Gravidade puxando para baixo
-                    if (soul.gravity === 'down') {
-                        soul.velocityY += 0.5; // Força G
-                        soul.y += soul.velocityY;
-                        // Pulo
-                        if (keys['ArrowUp'] && soul.y >= box.y + box.height - soul.size) {
-                            soul.velocityY = -8; 
-                            moved = true;
-                        }
-                    }
-                } else {
-                    // Física de Alma Vermelha (Livre)
-                    if (keys['ArrowUp']) { soul.y -= soul.speed; moved = true; }
-                    if (keys['ArrowDown']) { soul.y += soul.speed; moved = true; }
-                    if (keys['ArrowLeft']) { soul.x -= soul.speed; moved = true; }
-                    if (keys['ArrowRight']) { soul.x += soul.speed; moved = true; }
-                }
-
-                // Colisão com a Caixa de Batalha
-                if (soul.x < box.x) soul.x = box.x;
-                if (soul.x + soul.size > box.x + box.width) soul.x = box.x + box.width - soul.size;
-                if (soul.y < box.y) { soul.y = box.y; soul.velocityY = 0; }
-                if (soul.y + soul.size > box.y + box.height) { soul.y = box.y + box.height - soul.size; soul.velocityY = 0; }
-
-                if (moved) socket.emit('playerMove', { x: soul.x, y: soul.y });
-                
-                // Lógica da Tecla J (Empurrar a caixa no turno infinito)
-                // Se gameState.turn === 'infinite_sleep', permitir que o jogador mova a caixa colidindo com as bordas esquerdas
-            }
-
-            // Atualiza projéteis
-            projectiles.forEach(p => {
-                p.x += p.speedX;
-                p.y += p.speedY;
-            });
-        }
-
-        // --- RENDERIZAÇÃO (CANVAS) ---
-        function draw() {
-            // Fundo
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Sprite do Sans (Placeholder - Aqui você usaria ctx.drawImage com as sprites enviadas)
-            ctx.fillStyle = 'white';
-            ctx.font = '20px "Press Start 2P"';
-            ctx.fillText(gameState.turn === 'infinite_sleep' ? 'SANS (Dormindo Zzz)' : 'SANS', 280, 100);
-
-            // Caixa de Batalha
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(box.x, box.y, box.width, box.height);
-
-            // Alma (Coração)
-            ctx.fillStyle = soul.color;
-            ctx.beginPath(); // Desenho simples de um quadrado representando o coração para a colisão hitbox
-            ctx.arc(soul.x + soul.size/2, soul.y + soul.size/2, soul.size/2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Projéteis (Ossos)
-            ctx.fillStyle = 'white';
-            projectiles.forEach(p => {
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-            });
-        }
-
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
-
-        loop(); // Inicia o jogo
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>
