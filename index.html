@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Undertale: Multiplayer Battle System V0.4</title>
+    <title>Undertale: Multiplayer Battle System V0.4.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -263,7 +263,7 @@
             width: 90%;
             height: 110px;
             border: 2px solid #555;
-            background: url('Ataque/bg.png') center/cover no-repeat;
+            background: url('bg.png') center/cover no-repeat;
             background-color: #111;
             position: relative;
             align-items: center;
@@ -396,14 +396,13 @@
 </head>
 <body>
 
-    <!-- ================= TELA 1: LOBBY ================= -->
     <div id="lobby-screen">
         <div class="sans-container">
-            <img src="Sans textura/legs-normal.png" alt="" class="sans-part sans-legs">
-            <img src="Sans textura/arm-left.png" alt="" class="sans-part sans-arm-left">
-            <img src="Sans textura/arm-right.png" alt="" class="sans-part sans-arm-right">
-            <img src="Sans textura/body-normal.png" alt="" class="sans-part sans-body">
-            <img src="Sans textura/head-normal.png" alt="" class="sans-part sans-head">
+            <img src="legs-normal.png" alt="" class="sans-part sans-legs">
+            <img src="arm-left.png" alt="" class="sans-part sans-arm-left">
+            <img src="arm-right.png" alt="" class="sans-part sans-arm-right">
+            <img src="body-normal.png" alt="" class="sans-part sans-body">
+            <img src="head-normal.png" alt="" class="sans-part sans-head">
         </div>
 
         <div class="menu-box">
@@ -455,23 +454,21 @@
             </div>
 
             <div class="soul-preview-container" id="soul-display-container">
-                <img src="Alma do jogador/soul.png" alt="Soul" class="pixel-soul-img" id="soul-img">
+                <img src="soul.png" alt="Soul" class="pixel-soul-img" id="soul-img">
             </div>
 
             <button class="btn-ready" id="btn-ready" onclick="toggleReady()">APERTAR PRONTO</button>
         </div>
     </div>
 
-    <!-- ================= TELA 2: ARENA DE BATALHA ================= -->
     <div id="battle-screen">
         <div class="battle-top">
-            <!-- Skin modular do Sans de Batalha -->
             <div class="sans-container" id="sans-battle-sprite">
-                <img src="Sans textura/legs-normal.png" alt="" class="sans-part sans-legs">
-                <img src="Sans textura/arm-left.png" alt="" class="sans-part sans-arm-left">
-                <img src="Sans textura/arm-right.png" alt="" class="sans-part sans-arm-right">
-                <img src="Sans textura/body-normal.png" alt="" class="sans-part sans-body">
-                <img src="Sans textura/head-normal.png" alt="" class="sans-part sans-head">
+                <img src="legs-normal.png" alt="" class="sans-part sans-legs">
+                <img src="arm-left.png" alt="" class="sans-part sans-arm-left">
+                <img src="arm-right.png" alt="" class="sans-part sans-arm-right">
+                <img src="body-normal.png" alt="" class="sans-part sans-body">
+                <img src="head-normal.png" alt="" class="sans-part sans-head">
                 <div id="miss-popup">MISS</div>
             </div>
             <p style="font-size: 11px; margin-top: 5px; color: white; letter-spacing: 3px;">SANS</p>
@@ -489,7 +486,6 @@
             </div>
         </div>
 
-        <!-- PAINEL GM DO SANS -->
         <div id="sans-gm-controls">
             <span style="color: var(--sans-blue); font-size: 11px;">* CONTROLE DE TURNO DO SANS (ATALHO: TECLAS + E -)</span>
             <div class="sans-btn-group">
@@ -498,22 +494,21 @@
             </div>
         </div>
 
-        <!-- BOTÕES EM SPRITES ORIGINAIS -->
         <div class="battle-actions">
             <button class="action-btn-sprite" id="btn-fight" onclick="castVote('LUTAR')">
-                <img src="Hud de ações/f0.png" alt="LUTAR" id="img-LUTAR">
+                <img src="f0.png" alt="LUTAR" id="img-LUTAR">
                 <span class="vote-badge" id="badge-LUTAR">0 VOTOS</span>
             </button>
             <button class="action-btn-sprite" id="btn-act" onclick="castVote('AGIR')">
-                <img src="Hud de ações/All.png" alt="AGIR" id="img-AGIR">
+                <img src="All.png" alt="AGIR" id="img-AGIR">
                 <span class="vote-badge" id="badge-AGIR">0 VOTOS</span>
             </button>
             <button class="action-btn-sprite" id="btn-item" onclick="castVote('ITEM')">
-                <img src="Hud de ações/All.png" alt="ITEM" id="img-ITEM">
+                <img src="All.png" alt="ITEM" id="img-ITEM">
                 <span class="vote-badge" id="badge-ITEM">0 VOTOS</span>
             </button>
             <button class="action-btn-sprite" id="btn-mercy" onclick="castVote('POUPAR')">
-                <img src="Hud de ações/All.png" alt="POUPAR" id="img-POUPAR">
+                <img src="All.png" alt="POUPAR" id="img-POUPAR">
                 <span class="vote-badge" id="badge-POUPAR">0 VOTOS</span>
             </button>
         </div>
@@ -549,12 +544,12 @@
             'white': 'grayscale(100%) brightness(3)'
         };
 
-        // Mapeamento corrigido baseado no nome das pastas originais
+        // Mapeamento alterado para buscar na mesma pasta
         const spriteMap = {
-            'LUTAR': { normal: 'Hud de ações/f0.png', active: 'Hud de ações/f1.png' },
-            'AGIR':  { normal: 'Hud de ações/All.png', active: 'Hud de ações/All.png' },
-            'ITEM':  { normal: 'Hud de ações/All.png', active: 'Hud de ações/i1.png' },
-            'POUPAR':{ normal: 'Hud de ações/All.png', active: 'Hud de ações/All.png' }
+            'LUTAR': { normal: 'f0.png', active: 'f1.png' },
+            'AGIR':  { normal: 'All.png', active: 'All.png' },
+            'ITEM':  { normal: 'All.png', active: 'i1.png' },
+            'POUPAR':{ normal: 'All.png', active: 'All.png' }
         };
 
         /* ================= CONTROLE DE TECLADO (+ e - DO SANS) ================= */
@@ -618,8 +613,8 @@
             if (playerState.isReady) {
                 btn.classList.add('ready-active');
                 btn.innerText = "* PRONTO! INICIANDO...";
-                // Som de seleção ao confirmar
-                let audio = new Audio('Sons do menu/snd_select.wav');
+                // Som de seleção ao confirmar (caminho atualizado para raiz)
+                let audio = new Audio('snd_select.wav');
                 audio.play().catch(()=>{});
 
                 setTimeout(() => startBattle(), 800);
@@ -672,8 +667,8 @@
             gameState.hasVoted = true;
             gameState.votes[action]++;
             
-            // Som de escolha
-            let audio = new Audio('Hud de ações/snd_select.wav');
+            // Som de escolha (caminho atualizado para raiz)
+            let audio = new Audio('snd_select.wav');
             audio.play().catch(()=>{});
 
             document.querySelectorAll('.action-btn-sprite').forEach(btn => {
@@ -739,7 +734,8 @@
             gameState.phase = 'RESOLVING_ITEM';
             const healAmount = Math.floor(Math.random() * 50) + 1;
             
-            let audio = new Audio('Hud de ações/snd_heal_c.wav');
+            // Som de cura (caminho atualizado para raiz)
+            let audio = new Audio('snd_heal_c.wav');
             audio.play().catch(()=>{});
 
             document.getElementById('battle-text').innerHTML = `
@@ -784,7 +780,8 @@
                 sansSprite.classList.add('sans-dodging');
                 missPopup.classList.add('show-miss');
 
-                let audio = new Audio('Ataque/snd_hit.wav');
+                // Som de hit/miss (caminho atualizado para raiz)
+                let audio = new Audio('snd_hit.wav');
                 audio.play().catch(()=>{});
 
                 setTimeout(() => {
