@@ -3,58 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULB: Sans vs Frisk - Online</title>
+    <title>Undertale: Multiplayer Battle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #FFFFFF;
+            --border-color: #FFFFFF;
+        }
+
         body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            padding: 20px;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
         }
-        #gameCanvas {
-            border: 4px solid #fff;
-            background-color: #000;
-            image-rendering: pixelated; /* Mantém a vibe retro/pixel art */
-            margin-top: 20px;
+
+        /* Animação Suave do Sans */
+        @keyframes sansBreathing {
+            0% { transform: translateY(0px) scaleY(1); }
+            50% { transform: translateY(-5px) scaleY(1.05); }
+            100% { transform: translateY(0px) scaleY(1); }
         }
-        .ui-panel {
-            border: 2px solid #fff;
-            padding: 15px;
-            margin-bottom: 20px;
-            width: 600px;
+
+        .sans-container {
+            margin-bottom: 40px;
+            text-align: center;
         }
-        button, input {
-            background: #000;
-            color: #fff;
-            border: 1px solid #fff;
-            padding: 5px 10px;
-            font-family: inherit;
+
+        .sans-sprite {
+            font-size: 50px;
+            animation: sansBreathing 3s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        /* Estilo da Caixa de Menu estilo Undertale */
+        .menu-box {
+            border: 4px solid var(--border-color);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            background-color: black;
+        }
+
+        h1 {
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #FFFF00; /* Amarelo clássico de destaque */
+        }
+
+        select, button {
+            background-color: black;
+            color: white;
+            border: 2px solid white;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            padding: 10px;
             cursor: pointer;
+            outline: none;
         }
-        button:hover { background: #fff; color: #000; }
+
+        select:focus, button:hover {
+            border-color: #FFFF00;
+            color: #FFFF00;
+        }
+
+        select:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Visualização da Alma */
+        .soul-preview {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            height: 30px;
+            transition: transform 0.3s;
+        }
+
+        .monster-soul {
+            transform: rotate(180deg);
+        }
+
+        /* Botão de Pronto */
+        .btn-ready {
+            width: 100%;
+            font-size: 16px;
+            padding: 15px;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-ready.ready-active {
+            background-color: #008000;
+            border-color: #00FF00;
+            color: white;
+        }
     </style>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <div class="ui-panel">
-        <h2>Painel de Conexão (P2P)</h2>
-        <p>Seu ID: <span id="my-id" style="color: #ffff00;">Gerando...</span></p>
-        
-        <div>
-            <label>Conectar ao ID do amigo:</label>
-            <input type="text" id="friend-id" placeholder="Cole o ID aqui">
-            <button onclick="connectToPeer()">Conectar (Jogar como Frisk)</button>
-        </div>
-        <p id="status" style="color: #00ff00; margin-top: 10px;">Status: Aguardando conexão...</p>
+    <div class="sans-container">
+        <!-- Substitua este texto por uma tag <img> com o sprite real do Sans depois -->
+        <div class="sans-sprite">(0_0)</div> 
+        <p style="font-size: 10px; margin-top: 15px; color: gray;">SANS ESTÁ AGUARDANDO...</p>
     </div>
 
-    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <div class="menu-box">
+        <h1>LOBBY MULTIPLAYER</h1>
 
-    <script src="game.js"></script>
+        <div class="form-group">
+            <label for="player-count">* QUANTOS JOGADORES? (TOTAL)</label>
+            <select id="player-count">
+                <option value="2">2 JOGADORES (SANS + 1)</option>
+                <option value="3">3 JOGADORES (SANS + 2)</option>
+                <option value="4">4 JOGADORES (SANS + 3)</option>
+                <option value="5">5 JOGADORES (SANS + 4)</option>
+                <option value="6">6 JOGADORES (SANS + 5)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="role-select">* ESCOLHA SEU SLOT</label>
+            <select id="role-select" onchange="updateMenuState()">
+                <option value="sans">JOGADOR 1: SANS (INIMIGO)</option>
+                <option value="soul1">JOGADOR 2: ALMA 1</option>
+                <option value="soul2">JOGADOR 3: ALMA 2</option>
+                <option value="soul3">JOGADOR 4: ALMA 3</option>
+                <option value="soul4">JOGADOR 5: ALMA 4</option>
+                <option value="soul5">JOGADOR 6: ALMA 5</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="soul-color">* COR DA ALMA</label>
+            <select id="soul-color" onchange="updateSoulPreview()">
+                <option value="#FF0000">VERMELHA (DETERMINAÇÃO)</option>
+                <option value="#0000FF">AZUL (INTEGRIDADE)</option>
+                <option value="#00FF00">VERDE (BONDADE)</option>
+                <option value="#FFFF00">AMARELA (JUSTIÇA)</option>
+                <option value="#800080">ROXA (PERSEVERANÇA)</option>
+                <option value="#00FFFF">CIANO (PACIÊNCIA)</option>
+                <option value="#FFA500">LARANJA (BRAVURA)</option>
+                <option value="#FFFFFF">BRANCA (MONSTRO)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="monster-toggle-group">
+            <label for="is-monster">* TIPO DE ALMA</label>
+            <select id="is-monster" onchange="updateSoulPreview()">
+                <option value="human">HUMANA (NORMAL)</option>
+                <option value="monster">MONSTRO (CABEÇA PARA BAIXO)</option>
+            </select>
+        </div>
+
+        <div class="soul-preview" id="soul-display" style="color: #FF0000;">
+            &#x2764; <!-- Símbolo de Coração em HTML -->
+        </div>
+
+        <button class="btn-ready" id="btn-ready" onclick="toggleReady()">APERTAR PRONTO</button>
+    </div>
+
+    <script>
+        // Estado do jogador para facilitar a sincronização multiplayer futura (ex: WebSocket)
+        let playerState = {
+            role: 'sans',
+            color: '#FF0000',
+            isMonster: false,
+            isReady: false
+        };
+
+        function updateMenuState() {
+            const role = document.getElementById('role-select').value;
+            const colorSelect = document.getElementById('soul-color');
+            const monsterSelect = document.getElementById('is-monster');
+            const soulDisplay = document.getElementById('soul-display');
+            
+            playerState.role = role;
+
+            // Se for o Sans, desabilita personalização de alma
+            if (role === 'sans') {
+                colorSelect.disabled = true;
+                monsterSelect.disabled = true;
+                soulDisplay.innerHTML = ""; // Sans não tem alma visível no menu
+            } else {
+                colorSelect.disabled = false;
+                monsterSelect.disabled = false;
+                soulDisplay.innerHTML = "&#x2764;";
+                updateSoulPreview();
+            }
+            
+            // Reseta o status de "Pronto" se trocar de slot
+            if(playerState.isReady) {
+                toggleReady(); 
+            }
+        }
+
+        function updateSoulPreview() {
+            if (playerState.role === 'sans') return;
+
+            const color = document.getElementById('soul-color').value;
+            const type = document.getElementById('is-monster').value;
+            const soulDisplay = document.getElementById('soul-display');
+
+            playerState.color = color;
+            playerState.isMonster = (type === 'monster');
+
+            soulDisplay.style.color = color;
+
+            if (playerState.isMonster) {
+                soulDisplay.classList.add('monster-soul');
+            } else {
+                soulDisplay.classList.remove('monster-soul');
+            }
+        }
+
+        function toggleReady() {
+            const btn = document.getElementById('btn-ready');
+            playerState.isReady = !playerState.isReady;
+
+            if (playerState.isReady) {
+                btn.classList.add('ready-active');
+                btn.innerText = "* PRONTO! AGUARDANDO...";
+                // Aqui você enviaria o `playerState` via WebSocket para o servidor
+                console.log("Jogador Pronto:", playerState);
+            } else {
+                btn.classList.remove('ready-active');
+                btn.innerText = "APERTAR PRONTO";
+            }
+        }
+
+        // Inicializa o menu
+        updateMenuState();
+    </script>
 </body>
 </html>
