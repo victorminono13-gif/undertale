@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Undertale: Multiplayer Battle System V0.5.0</title>
+    <title>Undertale: Multiplayer Battle System V0.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #000000;
             --text-color: #FFFFFF;
-            --border-color: #FFFFFF;
             --highlight-color: #FFFF00;
-            --hp-green: #00FF00;
             --sans-blue: #00FFFF;
-            --miss-gray: #CCCCCC;
+            --hp-green: #00FF00;
         }
 
         * {
             box-sizing: border-box;
-            image-rendering: pixelated;
+            image-rendering: pixelated; /* Fiel ao Pixel Art */
         }
 
         body {
@@ -26,709 +24,437 @@
             color: var(--text-color);
             font-family: 'Press Start 2P', monospace;
             margin: 0;
-            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             user-select: none;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        /* --- ANIMAÇÃO DO SANS --- */
-        @keyframes sansHead { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-3px) rotate(-1deg); } 100% { transform: translateY(0px) rotate(0deg); } }
-        @keyframes sansBody { 0% { transform: translateY(0px) scaleY(1); } 50% { transform: translateY(-4px) scaleY(1.03); } 100% { transform: translateY(0px) scaleY(1); } }
-        @keyframes sansArms { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-2px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+        /* --- SANS SKIN CORRIGIDA --- */
+        @keyframes sansHead {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+        @keyframes sansBody {
+            0%, 100% { transform: translateY(0px) scaleY(1); }
+            50% { transform: translateY(-3px) scaleY(1.02); }
+        }
+        @keyframes sansArms {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
 
         .sans-container {
             position: relative;
             width: 120px;
-            height: 130px;
+            height: 120px;
             margin: 0 auto;
-            transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+            transition: transform 0.3s;
         }
 
-        .sans-dodging { transform: translateX(-130px) !important; }
+        .sans-dodging { transform: translateX(-150px) !important; }
+
         .sans-part { position: absolute; left: 50%; transform: translateX(-50%); }
-        .sans-legs { bottom: 0; width: 54px; z-index: 1; }
-        .sans-body { bottom: 20px; width: 68px; z-index: 3; animation: sansBody 3s ease-in-out infinite; }
-        .sans-arm-left { bottom: 24px; left: 12px; width: 24px; z-index: 2; transform-origin: top right; animation: sansArms 3s ease-in-out infinite 0.2s; }
-        .sans-arm-right { bottom: 24px; right: 12px; left: auto; width: 24px; z-index: 2; transform-origin: top left; animation: sansArms 3s ease-in-out infinite 0.4s; }
-        .sans-head { bottom: 54px; width: 54px; z-index: 4; animation: sansHead 3s ease-in-out infinite 0.1s; }
 
-        /* --- EFEITO MISS --- */
-        #miss-popup {
-            position: absolute; top: 10px; right: -60px; color: var(--miss-gray);
-            font-size: 22px; font-weight: bold; text-shadow: 2px 2px 0 #000;
-            opacity: 0; transition: all 0.4s ease-out; pointer-events: none; z-index: 10;
+        .sans-legs { bottom: 0; width: 50px; z-index: 1; }
+        .sans-body { bottom: 20px; width: 66px; z-index: 3; animation: sansBody 3s infinite; }
+        .sans-head { bottom: 58px; width: 50px; z-index: 4; animation: sansHead 3s infinite 0.1s; }
+        .sans-arm-left { bottom: 25px; left: 20px; width: 22px; z-index: 2; animation: sansArms 3s infinite 0.2s; }
+        .sans-arm-right { bottom: 25px; right: 20px; left: auto; width: 22px; z-index: 2; animation: sansArms 3s infinite 0.3s; }
+
+        /* --- MENUS E INTERFACE --- */
+        .menu-box {
+            border: 4px solid white;
+            padding: 20px;
+            width: 600px;
+            background-color: black;
+            margin-top: 10px;
         }
-        .show-miss { opacity: 1 !important; transform: translateY(-35px); }
 
-        /* --- TELA 1: LOBBY --- */
-        #lobby-screen { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; }
-        .menu-box { border: 4px solid var(--border-color); padding: 30px; width: 100%; background-color: black; box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
-        h1 { font-size: 16px; text-align: center; margin-bottom: 25px; letter-spacing: 2px; }
-        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
-        label { font-size: 10px; margin-bottom: 8px; color: var(--highlight-color); }
-        select, button { background-color: black; color: white; border: 2px solid white; font-family: 'Press Start 2P', monospace; font-size: 11px; padding: 12px; cursor: pointer; outline: none; }
+        h1 { font-size: 14px; text-align: center; margin-bottom: 20px; }
+        label { font-size: 10px; color: var(--highlight-color); display: block; margin-bottom: 5px; }
+        .form-group { margin-bottom: 15px; }
+        select, button {
+            background-color: black; color: white; border: 2px solid white;
+            font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 10px; width: 100%;
+            cursor: pointer;
+        }
         select:focus, button:hover { border-color: var(--highlight-color); color: var(--highlight-color); }
-
-        .soul-preview-container { display: flex; justify-content: center; align-items: center; height: 45px; margin: 10px 0; }
-        .pixel-soul-img { width: 24px; height: 24px; transition: transform 0.3s ease; }
-        .monster-soul { transform: rotate(180deg); }
-
-        .btn-ready { width: 100%; font-size: 14px; padding: 15px; margin-top: 10px; }
+        
+        .btn-ready { font-size: 14px; padding: 15px; margin-top: 10px; }
         .btn-ready.ready-active { background-color: #008000; border-color: #00FF00; color: white; }
-        .btn-ready.waiting-active { background-color: #555500; border-color: #FFFF00; color: white; }
 
-        /* --- TELA 2: ARENA DE BATALHA --- */
-        #battle-screen { display: none; width: 100%; max-width: 650px; flex-direction: column; align-items: center; justify-content: space-between; min-height: 550px; }
-        .battle-top { display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; margin-top: 10px; }
-        
-        .battle-box {
-            border: 4px solid white; width: 100%; height: 220px; background-color: black;
-            display: flex; align-items: center; justify-content: center; position: relative;
-            margin: 15px 0; overflow: hidden; padding: 20px;
-        }
-        .battle-text { font-size: 13px; line-height: 1.8; width: 100%; text-align: left; align-self: flex-start; z-index: 5; }
-
-        /* --- MECÂNICAS DE BATALHA DA ALMA --- */
-        #battle-soul {
-            position: absolute; width: 16px; height: 16px; display: none; z-index: 20;
-            transition: filter 0.2s, transform 0.1s;
-        }
-        
-        /* AVISO DE ATAQUE ! */
-        #warning-box {
-            position: absolute; background-color: rgba(255, 0, 0, 0.4); border: 2px solid red;
-            display: none; align-items: center; justify-content: center; z-index: 10; font-size: 24px; color: yellow;
-        }
-
-        /* OSSOS */
-        .bone-attack {
-            position: absolute; z-index: 15; background-repeat: repeat;
-            background-image: url('BoneOutline.png'); background-size: contain;
-        }
-
-        /* GASTER BLASTERS */
-        .gaster-blaster {
-            position: absolute; width: 60px; height: 60px; z-index: 25;
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-        }
-        .blaster-beam {
-            position: absolute; background-color: white; z-index: 24; box-shadow: 0 0 10px cyan; display: none;
-        }
-
-        /* --- QUICK TIME EVENT (QTE) --- */
-        #qte-container { display: none; width: 90%; height: 110px; border: 2px solid #555; background: url('bg.png') center/cover no-repeat; background-color: #111; position: relative; align-items: center; justify-content: center; z-index: 5; }
-        .qte-target-center { position: absolute; width: 14px; height: 100%; background-color: rgba(255, 255, 0, 0.4); border-left: 2px solid yellow; border-right: 2px solid yellow; left: calc(50% - 7px); }
-        .qte-bar { position: absolute; width: 10px; height: 95%; background-color: white; border: 1px solid black; left: 0%; box-shadow: 0 0 8px white; }
-        @keyframes qteSlide { 0% { left: 2%; } 100% { left: 95%; } }
-        .qte-animating { animation: qteSlide 1.1s infinite alternate linear; }
-
-        /* --- PAINEL GM DO SANS --- */
-        #sans-gm-controls { display: none; flex-direction: column; align-items: center; width: 100%; border: 2px dashed var(--sans-blue); padding: 10px; background-color: rgba(0, 255, 255, 0.05); margin-top: 5px; font-size: 9px; line-height: 1.5; text-align: center; }
-        .sans-btn-group { display: flex; gap: 10px; margin-top: 6px; }
-        .sans-btn { border-color: var(--sans-blue); color: var(--sans-blue); padding: 6px 10px; font-size: 9px; }
-        .sans-btn:hover { background-color: var(--sans-blue); color: black; }
-
-        /* --- BOTÕES DE OPÇÃO EM SPRITE --- */
-        .battle-actions { display: flex; justify-content: space-between; width: 100%; gap: 10px; margin-top: 5px; }
-        .action-btn-sprite { flex: 1; background: transparent; border: none; padding: 0; cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; outline: none; }
-        .action-btn-sprite img { width: 100%; max-width: 130px; height: auto; display: block; transition: transform 0.1s; }
+        /* --- BOTÕES DE AÇÃO --- */
+        .battle-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; width: 600px; }
+        .action-btn-sprite { flex: 1; background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.1s; }
+        .action-btn-sprite img { width: 100%; height: auto; display: block; }
         .action-btn-sprite:hover img, .action-btn-sprite.selected img { transform: scale(1.05); }
-        .action-btn-sprite:disabled { cursor: not-allowed; opacity: 0.5; }
-        .vote-badge { font-size: 8px; background-color: #FF8000; color: black; padding: 2px 5px; margin-top: 4px; font-weight: bold; }
-        .action-btn-sprite.selected .vote-badge { background-color: var(--highlight-color); }
-        .sim-btn { margin-top: 10px; font-size: 9px; border-color: #555; color: #AAA; }
-        .heal-text { color: var(--hp-green); font-weight: bold; }
+
+        /* --- ARENA (O QUADRADO) E ALMA --- */
+        #arena-container {
+            display: none;
+            width: 280px;
+            height: 280px;
+            border: 4px solid white;
+            position: relative;
+            background-color: black;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        #player-soul {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            z-index: 10;
+        }
+
+        /* Efeito de Gravidade Azul */
+        .soul-blue { filter: hue-rotate(240deg) saturate(3) !important; }
+
+        /* Alerta de Ataque ! */
+        .warning-box {
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.4);
+            border: 2px solid red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: yellow;
+            font-size: 24px;
+            z-index: 5;
+        }
+
+        .bone-attack { position: absolute; width: 14px; height: 100px; z-index: 6; }
+        
+        .gaster-blaster { position: absolute; width: 60px; height: 60px; z-index: 7; transition: transform 0.2s; }
+        .gaster-beam { position: absolute; background: white; box-shadow: 0 0 10px cyan; z-index: 6; }
+
+        #sans-gm-controls { text-align: center; color: var(--sans-blue); font-size: 10px; margin-top: 10px; display: none; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <!-- ================= TELA 1: LOBBY ================= -->
+    <!-- LOBBY -->
     <div id="lobby-screen">
         <div class="sans-container">
-            <img src="legs-normal.png" alt="" class="sans-part sans-legs">
-            <img src="arm-left.png" alt="" class="sans-part sans-arm-left">
-            <img src="arm-right.png" alt="" class="sans-part sans-arm-right">
-            <img src="body-normal.png" alt="" class="sans-part sans-body">
-            <img src="head-normal.png" alt="" class="sans-part sans-head">
+            <img src="legs-normal.png" class="sans-part sans-legs">
+            <img src="arm-left.png" class="sans-part sans-arm-left">
+            <img src="arm-right.png" class="sans-part sans-arm-right">
+            <img src="body-normal.png" class="sans-part sans-body">
+            <img src="head-normal.png" class="sans-part sans-head">
         </div>
 
         <div class="menu-box">
-            <h1>LOBBY MULTIPLAYER</h1>
-
+            <h1>SISTEMA DE BATALHA</h1>
             <div class="form-group">
-                <label for="player-count">* TOTAL DE JOGADORES</label>
-                <select id="player-count">
-                    <option value="2">2 JOGADORES (SANS + 1 ALMA)</option>
-                    <option value="3">3 JOGADORES (SANS + 2 ALMAS)</option>
-                    <option value="4">4 JOGADORES (SANS + 3 ALMAS)</option>
-                    <option value="5">5 JOGADORES (SANS + 4 ALMAS)</option>
-                    <option value="6">6 JOGADORES (SANS + 5 ALMAS)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="role-select">* ESCOLHA SEU SLOT</label>
+                <label>* ESCOLHA SEU SLOT</label>
                 <select id="role-select" onchange="updateMenuState()">
-                    <option value="sans">JOGADOR 1: SANS (INIMIGO / GM)</option>
-                    <option value="soul1" selected>JOGADOR 2: ALMA 1</option>
-                    <option value="soul2">JOGADOR 3: ALMA 2</option>
-                    <option value="soul3">JOGADOR 4: ALMA 3</option>
-                    <option value="soul4">JOGADOR 5: ALMA 4</option>
-                    <option value="soul5">JOGADOR 6: ALMA 5</option>
+                    <option value="sans">JOGADOR 1: SANS (GM)</option>
+                    <option value="soul1" selected>JOGADOR 2: ALMA HUMANA</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label for="soul-color">* COR DA SUA ALMA</label>
-                <select id="soul-color" onchange="updateSoulPreview()">
-                    <option value="red">VERMELHA (DETERMINAÇÃO)</option>
-                    <option value="blue">AZUL (INTEGRIDADE)</option>
-                    <option value="green">VERDE (BONDADE)</option>
-                    <option value="yellow">AMARELA (JUSTIÇA)</option>
-                    <option value="purple">ROXA (PERSEVERANÇA)</option>
-                    <option value="cyan">CIANO (PACIÊNCIA)</option>
-                    <option value="orange">LARANJA (BRAVURA)</option>
-                    <option value="white">BRANCA (MONSTRO)</option>
-                </select>
+            <div style="display:flex; justify-content: center; margin: 10px 0;">
+                <img src="soul.png" id="soul-img" style="width:24px; height:24px;">
             </div>
-
-            <div class="form-group" id="monster-toggle-group">
-                <label for="is-monster">* ORIENTAÇÃO DA ALMA</label>
-                <select id="is-monster" onchange="updateSoulPreview()">
-                    <option value="human">HUMANA (NORMAL)</option>
-                    <option value="monster">MONSTRO (CABEÇA PARA BAIXO)</option>
-                </select>
-            </div>
-
-            <div class="soul-preview-container" id="soul-display-container">
-                <img src="soul.png" alt="Soul" class="pixel-soul-img" id="soul-img">
-            </div>
-
             <button class="btn-ready" id="btn-ready" onclick="toggleReady()">APERTAR PRONTO</button>
         </div>
     </div>
 
-    <!-- ================= TELA 2: ARENA DE BATALHA ================= -->
-    <div id="battle-screen">
-        <div class="battle-top">
-            <div class="sans-container" id="sans-battle-sprite">
-                <img src="legs-normal.png" alt="" class="sans-part sans-legs">
-                <img src="arm-left.png" alt="" class="sans-part sans-arm-left">
-                <img src="arm-right.png" alt="" class="sans-part sans-arm-right">
-                <img src="body-normal.png" alt="" class="sans-part sans-body">
-                <img src="head-normal.png" alt="" class="sans-part sans-head">
-                <div id="miss-popup">MISS</div>
-            </div>
-            <p style="font-size: 11px; margin-top: 5px; color: white; letter-spacing: 3px;">SANS</p>
+    <!-- TELA DE BATALHA -->
+    <div id="battle-screen" style="display: none; width: 600px;">
+        <div class="sans-container" id="sans-battle-sprite">
+            <img src="legs-normal.png" class="sans-part sans-legs">
+            <img src="arm-left.png" class="sans-part sans-arm-left">
+            <img src="arm-right.png" class="sans-part sans-arm-right">
+            <img src="body-normal.png" class="sans-part sans-body">
+            <img src="head-normal.png" class="sans-part sans-head">
         </div>
 
-        <div class="battle-box" id="arena-box">
-            <div class="battle-text" id="battle-text">
-                * Votação iniciada! O que as Almas irão fazer?<br>
-                * Escolha uma opção abaixo.
-            </div>
-
-            <!-- Mecânicas Internas da Arena -->
-            <img src="soul.png" id="battle-soul" alt="Soul">
-            <div id="warning-box">!</div>
-
-            <div id="qte-container">
-                <div class="qte-target-center"></div>
-                <div class="qte-bar qte-animating" id="qte-bar"></div>
+        <!-- CAIXA DE DIÁLOGO NORMAL -->
+        <div class="menu-box" id="dialogue-box" style="height: 150px; display: flex; align-items: center;">
+            <div style="font-size: 14px; line-height: 1.8;" id="battle-text">
+                * Sans te observa.<br>* O que você vai fazer?
             </div>
         </div>
 
-        <!-- PAINEL GM DO SANS -->
+        <!-- ARENA DE ATAQUE (Substitui o Diálogo) -->
+        <div id="arena-container">
+            <img src="soul.png" id="player-soul">
+        </div>
+
         <div id="sans-gm-controls">
-            <span style="color: var(--sans-blue);">* CONTROLES DO SANS: [W, A, S, D] GRAVIDADE & OSSOS | [Q, E] ALTERNAR MODO</span><br>
-            <span id="sans-mode-display" style="color: yellow;">MODO ATUAL: GRAVIDADE AZUL & OSSOS</span>
-            <div class="sans-btn-group">
-                <button class="sans-btn" onclick="adjustSansTime(-2)">[ - ] TEMPO (-2s)</button>
-                <button class="sans-btn" onclick="adjustSansTime(2)">[ + ] TEMPO (+2s)</button>
-            </div>
+            * GM SANS ATIVO<br>
+            [W A S D]: Gravidade Azul | [W A S D Duplo]: Ataque de Ossos<br>
+            [Q/E]: Trocar Arma (Atual: <span id="current-weapon" style="color:yellow">OSSOS</span>)<br>
+            [S] (Modo Blaster): Atirar Gaster Blaster
         </div>
 
-        <!-- BOTÕES EM SPRITES ORIGINAIS -->
         <div class="battle-actions">
-            <button class="action-btn-sprite" id="btn-fight" onclick="castVote('LUTAR')">
-                <img src="f0.png" alt="LUTAR" id="img-LUTAR">
-                <span class="vote-badge" id="badge-LUTAR">0 VOTOS</span>
+            <button class="action-btn-sprite" onclick="triggerQTE()">
+                <img src="f0.png" id="img-LUTAR">
             </button>
-            <button class="action-btn-sprite" id="btn-act" onclick="castVote('AGIR')">
-                <img src="All.png" alt="AGIR" id="img-AGIR">
-                <span class="vote-badge" id="badge-AGIR">0 VOTOS</span>
+            <button class="action-btn-sprite" onclick="triggerSansTurn()">
+                <img src="All.png" id="img-AGIR">
             </button>
-            <button class="action-btn-sprite" id="btn-item" onclick="castVote('ITEM')">
-                <img src="All.png" alt="ITEM" id="img-ITEM">
-                <span class="vote-badge" id="badge-ITEM">0 VOTOS</span>
+            <button class="action-btn-sprite" onclick="triggerSansTurn()">
+                <img src="All.png" id="img-ITEM">
             </button>
-            <button class="action-btn-sprite" id="btn-mercy" onclick="castVote('POUPAR')">
-                <img src="All.png" alt="POUPAR" id="img-POUPAR">
-                <span class="vote-badge" id="badge-POUPAR">0 VOTOS</span>
+            <button class="action-btn-sprite" onclick="triggerSansTurn()">
+                <img src="All.png" id="img-POUPAR">
             </button>
         </div>
-
-        <button class="sim-btn" id="btn-sim" onclick="simulateNetworkVotes()">[ TESTE OFFLINE ] SIMULAR VOTOS DAS OUTRAS ALMAS</button>
     </div>
 
     <script>
-        /* ================= ESTADOS DO SISTEMA ================= */
-        let playerState = { role: 'soul1', color: 'red', isMonster: false, isReady: false };
-        let gameState = {
-            phase: 'VOTING', votes: { 'LUTAR': 0, 'AGIR': 0, 'ITEM': 0, 'POUPAR': 0 },
-            hasVoted: false, sansTurnTimer: 10, timerInterval: null,
-            sansMode: 'BONES', // 'BONES' ou 'BLASTER'
-            lastDirection: '', lastDirTime: 0
-        };
+        let playerState = { role: 'soul1', isReady: false };
+        let gameState = { phase: 'VOTING' };
+        
+        // FÍSICA DA ALMA
+        let soul = { x: 132, y: 132, vx: 0, vy: 0, speed: 3.5, size: 16 };
+        let gravity = { x: 0, y: 0 };
+        let isBlue = false;
+        let keys = {};
 
-        let soulPos = { x: 280, y: 90, vx: 0, vy: 0, gravity: 'none', isBlue: false };
-        let keysPressed = {};
-        let soulLoop = null;
+        // SANS GM
+        let sansWeapon = 'BONES'; // 'BONES' ou 'BLASTERS'
+        let lastKey = '';
+        let lastKeyTime = 0;
 
-        const soulFilters = {
-            'red': 'none', 'blue': 'hue-rotate(240deg) saturate(3)', 'green': 'hue-rotate(120deg) saturate(3)',
-            'yellow': 'hue-rotate(60deg) brightness(1.5)', 'purple': 'hue-rotate(280deg) saturate(2)',
-            'cyan': 'hue-rotate(180deg) brightness(1.5)', 'orange': 'hue-rotate(30deg) saturate(3)', 'white': 'grayscale(100%) brightness(3)'
-        };
-
-        const spriteMap = {
-            'LUTAR': { normal: 'f0.png', active: 'f1.png' }, 'AGIR': { normal: 'All.png', active: 'All.png' },
-            'ITEM': { normal: 'All.png', active: 'i1.png' }, 'POUPAR': { normal: 'All.png', active: 'All.png' }
-        };
-
-        /* ================= SINCRONIZAÇÃO VIA LOCALSTORAGE ================= */
-        localStorage.removeItem('ut_multiplayer_sync');
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'ut_multiplayer_sync') {
-                const data = JSON.parse(e.newValue);
-                if (!data) return;
-
-                if (data.type === 'START_BATTLE' && playerState.role !== 'sans') {
-                    new Audio('snd_select.wav').play().catch(()=>{});
-                    startBattle();
-                }
-                if (data.type === 'VOTE' && data.playerRole !== playerState.role) {
-                    gameState.votes[data.action]++;
-                    updateVoteDisplay();
-                    checkVotingComplete();
-                }
-                if (data.type === 'SANS_ATTACK' && playerState.role !== 'sans') {
-                    handleRemoteSansAttack(data);
-                }
-            }
-        });
-
-        function sendSyncEvent(payload) {
-            payload.timestamp = Date.now();
-            localStorage.setItem('ut_multiplayer_sync', JSON.stringify(payload));
-        }
-
-        /* ================= CONTROLES DO TECLADO ================= */
-        window.addEventListener('keydown', (e) => {
-            keysPressed[e.code] = true;
-
-            if (playerState.role === 'sans' && gameState.phase === 'SANS_TURN') {
-                if (e.key === '+' || e.key === '=') adjustSansTime(2);
-                if (e.key === '-' || e.key === '_') adjustSansTime(-2);
-                
-                // Trocar Modo do Sans
-                if (e.code === 'KeyQ' || e.code === 'KeyE') {
-                    gameState.sansMode = (gameState.sansMode === 'BONES') ? 'BLASTER' : 'BONES';
-                    document.getElementById('sans-mode-display').innerText = `MODO ATUAL: ${gameState.sansMode === 'BONES' ? 'GRAVIDADE AZUL & OSSOS' : 'GASTER BLASTERS (TECLA S)'}`;
-                }
-
-                // Ataques no Modo Ossos / Gravidade
-                if (gameState.sansMode === 'BONES') {
-                    let dir = '';
-                    if (e.code === 'KeyW') dir = 'UP';
-                    if (e.code === 'KeyS') dir = 'DOWN';
-                    if (e.code === 'KeyA') dir = 'LEFT';
-                    if (e.code === 'KeyD') dir = 'RIGHT';
-
-                    if (dir) {
-                        const now = Date.now();
-                        if (gameState.lastDirection === dir && (now - gameState.lastDirTime) < 1000) {
-                            // Duplo clique detectado -> Disparar Ossos!
-                            triggerBoneAttack(dir);
-                            gameState.lastDirection = '';
-                        } else {
-                            // Clique simples -> Mudar gravidade e arremessar alma
-                            applyBlueGravity(dir);
-                            gameState.lastDirection = dir;
-                            gameState.lastDirTime = now;
-                        }
-                    }
-                } else if (gameState.sansMode === 'BLASTER' && e.code === 'KeyS') {
-                    triggerGasterBlaster();
-                }
-            }
-
-            if (gameState.phase === 'QTE' && (e.code === 'Space' || e.code === 'KeyZ')) triggerAttackStrike();
-        });
-
-        window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
-
-        /* ================= LOBBY ================= */
+        /* ================= SETUP ================= */
         function updateMenuState() {
-            const role = document.getElementById('role-select').value;
-            const colorSelect = document.getElementById('soul-color');
-            const monsterSelect = document.getElementById('is-monster');
-            const soulContainer = document.getElementById('soul-display-container');
-            const btnReady = document.getElementById('btn-ready');
-            
-            playerState.role = role;
-            if (role === 'sans') {
-                colorSelect.disabled = true; monsterSelect.disabled = true;
-                soulContainer.style.visibility = "hidden"; btnReady.innerText = "INICIAR PARTIDA";
-            } else {
-                colorSelect.disabled = false; monsterSelect.disabled = false;
-                soulContainer.style.visibility = "visible"; btnReady.innerText = "APERTAR PRONTO";
-                updateSoulPreview();
-            }
-            if (playerState.isReady) { playerState.isReady = false; btnReady.classList.remove('ready-active', 'waiting-active'); }
-        }
-
-        function updateSoulPreview() {
-            if (playerState.role === 'sans') return;
-            const color = document.getElementById('soul-color').value;
-            const type = document.getElementById('is-monster').value;
-            const soulImg = document.getElementById('soul-img');
-
-            playerState.color = color; playerState.isMonster = (type === 'monster');
-            soulImg.style.filter = soulFilters[color] || 'none';
-            if (playerState.isMonster) soulImg.classList.add('monster-soul');
-            else soulImg.classList.remove('monster-soul');
+            playerState.role = document.getElementById('role-select').value;
+            if (playerState.isReady) toggleReady();
         }
 
         function toggleReady() {
-            const btn = document.getElementById('btn-ready');
             playerState.isReady = !playerState.isReady;
+            const btn = document.getElementById('btn-ready');
             if (playerState.isReady) {
-                new Audio('snd_select.wav').play().catch(()=>{});
-                if (playerState.role === 'sans') {
-                    btn.classList.add('ready-active'); btn.innerText = "* INICIANDO...";
-                    sendSyncEvent({ type: 'START_BATTLE' });
-                    setTimeout(() => startBattle(), 800);
-                } else {
-                    btn.classList.add('waiting-active'); btn.innerText = "* PRONTO! AGUARDANDO SANS...";
-                }
-            } else {
-                btn.classList.remove('ready-active', 'waiting-active');
-                btn.innerText = playerState.role === 'sans' ? "INICIAR PARTIDA" : "APERTAR PRONTO";
-            }
-        }
-
-        function startBattle() {
-            document.getElementById('lobby-screen').style.display = 'none';
-            document.getElementById('battle-screen').style.display = 'flex';
-            startVotingPhase();
-        }
-
-        /* ================= SISTEMA DE VOTAÇÃO ================= */
-        function startVotingPhase() {
-            gameState.phase = 'VOTING'; gameState.hasVoted = false;
-            gameState.votes = { 'LUTAR': 0, 'AGIR': 0, 'ITEM': 0, 'POUPAR': 0 };
-
-            document.getElementById('qte-container').style.display = 'none';
-            document.getElementById('sans-gm-controls').style.display = 'none';
-            document.getElementById('battle-text').style.display = 'block';
-            document.getElementById('btn-sim').style.display = 'block';
-            document.getElementById('battle-soul').style.display = 'none';
-            clearInterval(soulLoop);
-            
-            const buttons = document.querySelectorAll('.action-btn-sprite');
-            buttons.forEach(btn => { btn.disabled = false; btn.classList.remove('selected'); });
-            for (let act in spriteMap) document.getElementById(`img-${act}`).src = spriteMap[act].normal;
-
-            updateVoteDisplay();
-            if (playerState.role === 'sans') {
-                document.getElementById('battle-text').innerHTML = `* Você é o <span style="color:cyan">SANS</span>.<br>* Aguarde as Almas votarem em uma ação...`;
-                buttons.forEach(btn => btn.disabled = true);
-            } else {
-                document.getElementById('battle-text').innerHTML = `* Votação de Turno! O que sua Alma fará?<br>* Clique em um dos botões abaixo para votar.`;
-            }
-        }
-
-        function castVote(action) {
-            if (gameState.hasVoted || playerState.role === 'sans') return;
-            gameState.hasVoted = true; gameState.votes[action]++;
-            new Audio('snd_select.wav').play().catch(()=>{});
-
-            document.querySelectorAll('.action-btn-sprite').forEach(btn => btn.classList.remove('selected'));
-            for (let act in spriteMap) document.getElementById(`img-${act}`).src = spriteMap[act].normal;
-
-            event.currentTarget.classList.add('selected');
-            document.getElementById(`img-${action}`).src = spriteMap[action].active;
-            updateVoteDisplay();
-            document.getElementById('battle-text').innerHTML = `* Você selecionou <span style="color:yellow">${action}</span>.<br>* Aguardando o voto dos outros...`;
-            sendSyncEvent({ type: 'VOTE', action: action, playerRole: playerState.role });
-            checkVotingComplete();
-        }
-
-        function updateVoteDisplay() {
-            for (let act in gameState.votes) document.getElementById(`badge-${act}`).innerText = `${gameState.votes[act]} VOTOS`;
-        }
-
-        function simulateNetworkVotes() {
-            const actions = ['LUTAR', 'LUTAR', 'ITEM', 'AGIR', 'POUPAR'];
-            for(let i=0; i<3; i++) gameState.votes[actions[Math.floor(Math.random() * actions.length)]]++;
-            updateVoteDisplay(); checkVotingComplete();
-        }
-
-        function checkVotingComplete() {
-            let totalVotes = Object.values(gameState.votes).reduce((a, b) => a + b, 0);
-            if (totalVotes >= 2) {
-                document.getElementById('btn-sim').style.display = 'none';
-                let winner = Object.keys(gameState.votes).reduce((a, b) => gameState.votes[a] > gameState.votes[b] ? a : b);
-                for (let act in spriteMap) document.getElementById(`img-${act}`).src = (act === winner) ? spriteMap[act].active : spriteMap[act].normal;
-                document.getElementById('battle-text').innerHTML = `* A ação vencedora das Almas foi: <span style="color:yellow">${winner}</span>!`;
-                
+                btn.classList.add('ready-active');
+                btn.innerText = "* PRONTO! INICIANDO...";
                 setTimeout(() => {
-                    if (winner === 'LUTAR') startQTEPhase();
-                    else if (winner === 'ITEM') resolveItemAction();
-                    else {
-                        document.getElementById('battle-text').innerHTML = `* Vocês tentam ${winner.toLowerCase()}... Mas Sans ignora e prepara o ataque!`;
-                        setTimeout(() => startSansTurn(), 2000);
+                    document.getElementById('lobby-screen').style.display = 'none';
+                    document.getElementById('battle-screen').style.display = 'flex';
+                }, 800);
+            } else {
+                btn.classList.remove('ready-active');
+                btn.innerText = "APERTAR PRONTO";
+            }
+        }
+
+        /* ================= INPUT DO TECLADO ================= */
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+
+            if (gameState.phase === 'SANS_TURN' && playerState.role === 'sans') {
+                let k = e.key.toLowerCase();
+                
+                // Troca de arma
+                if (k === 'q' || k === 'e') {
+                    sansWeapon = (sansWeapon === 'BONES') ? 'BLASTERS' : 'BONES';
+                    document.getElementById('current-weapon').innerText = sansWeapon === 'BONES' ? 'OSSOS' : 'BLASTERS';
+                    return;
+                }
+
+                // Ataque Blaster
+                if (sansWeapon === 'BLASTERS' && k === 's') {
+                    spawnGasterBlaster();
+                    return;
+                }
+
+                // Gravidade e Ossos
+                if (['w','a','s','d'].includes(k) && sansWeapon === 'BONES') {
+                    let now = Date.now();
+                    if (lastKey === k && now - lastKeyTime < 300) {
+                        spawnBoneAttack(k); // Duplo clique = Ossos
+                        lastKey = '';
+                    } else {
+                        slamSoul(k); // Um clique = Gravidade Azul
+                        lastKey = k;
+                        lastKeyTime = now;
                     }
-                }, 1500);
+                }
             }
-        }
+        });
 
-        function resolveItemAction() {
-            gameState.phase = 'RESOLVING_ITEM';
-            const healAmount = Math.floor(Math.random() * 50) + 1;
-            new Audio('snd_heal_c.wav').play().catch(()=>{});
-            document.getElementById('battle-text').innerHTML = `* As Almas consomem um Item misterioso!<br>* O grupo recuperou <span class="heal-text">${healAmount} HP</span>!`;
-            setTimeout(() => startSansTurn(), 2500);
-        }
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-        /* ================= QUICK TIME EVENT ================= */
-        function startQTEPhase() {
-            gameState.phase = 'QTE';
-            document.getElementById('battle-text').style.display = 'none';
-            const qteContainer = document.getElementById('qte-container');
-            const qteBar = document.getElementById('qte-bar');
-            qteContainer.style.display = 'flex';
-            qteBar.classList.add('qte-animating'); qteBar.style.left = '2%';
-            document.querySelectorAll('.action-btn-sprite').forEach(btn => btn.disabled = true);
-            qteContainer.onclick = triggerAttackStrike;
-        }
+        /* ================= LOOP DA ARENA (REQUEST ANIMATION FRAME) ================= */
+        function updateArena() {
+            if (gameState.phase !== 'SANS_TURN') return;
 
-        function triggerAttackStrike() {
-            if (gameState.phase !== 'QTE') return;
-            gameState.phase = 'RESOLVING_ATTACK';
-            const qteBar = document.getElementById('qte-bar');
-            qteBar.classList.remove('qte-animating');
-            qteBar.style.left = window.getComputedStyle(qteBar).left;
-            qteBar.style.backgroundColor = 'yellow';
+            // Movimentação do Jogador (Alma)
+            if (playerState.role !== 'sans') {
+                if (!isBlue) { // Vermelho: movimento livre 4 direções
+                    if (keys['ArrowUp']) soul.y -= soul.speed;
+                    if (keys['ArrowDown']) soul.y += soul.speed;
+                    if (keys['ArrowLeft']) soul.x -= soul.speed;
+                    if (keys['ArrowRight']) soul.x += soul.speed;
+                } else { // Azul: sofre gravidade e só pode pular
+                    soul.vx += gravity.x;
+                    soul.vy += gravity.y;
+                    
+                    // Pulo simples oposto à gravidade
+                    if (keys['ArrowUp'] && gravity.y > 0 && soul.y >= 260) soul.vy = -10; 
+                    if (keys['ArrowDown'] && gravity.y < 0 && soul.y <= 0) soul.vy = 10;
+                    if (keys['ArrowLeft'] && gravity.x > 0 && soul.x >= 260) soul.vx = -10;
+                    if (keys['ArrowRight'] && gravity.x < 0 && soul.x <= 0) soul.vx = 10;
 
-            setTimeout(() => {
-                const sansSprite = document.getElementById('sans-battle-sprite');
-                const missPopup = document.getElementById('miss-popup');
-                sansSprite.classList.add('sans-dodging'); missPopup.classList.add('show-miss');
-                new Audio('snd_hit.wav').play().catch(()=>{});
-                setTimeout(() => {
-                    sansSprite.classList.remove('sans-dodging'); missPopup.classList.remove('show-miss');
-                    startSansTurn();
-                }, 1800);
-            }, 400);
-        }
-
-        /* ================= TURNO SANS & MOVIMENTAÇÃO DA ALMA ================= */
-        function startSansTurn() {
-            gameState.phase = 'SANS_TURN';
-            gameState.sansTurnTimer = 15;
-            document.getElementById('qte-container').style.display = 'none';
-            document.getElementById('battle-text').style.display = 'none';
-            
-            // Inicia a Alma
-            const soul = document.getElementById('battle-soul');
-            soul.style.display = 'block';
-            soulPos = { x: 280, y: 90, vx: 0, vy: 0, gravity: 'none', isBlue: false };
-            soul.style.filter = soulFilters[playerState.color] || 'none';
-            
-            if (playerState.role === 'sans') document.getElementById('sans-gm-controls').style.display = 'flex';
-            
-            clearInterval(gameState.timerInterval);
-            gameState.timerInterval = setInterval(() => {
-                gameState.sansTurnTimer--;
-                if (gameState.sansTurnTimer <= 0) {
-                    clearInterval(gameState.timerInterval);
-                    endSansTurn();
-                }
-            }, 1000);
-
-            // Loop de Movimento da Alma (60 FPS)
-            clearInterval(soulLoop);
-            soulLoop = setInterval(updateSoulMovement, 1000 / 60);
-        }
-
-        function updateSoulMovement() {
-            const soul = document.getElementById('battle-soul');
-            const speed = 4;
-            const gForce = 0.6;
-
-            if (!soulPos.isBlue) {
-                // Alma Vermelha / Normal (Livre em 8 direções)
-                if (keysPressed['ArrowUp']) soulPos.y -= speed;
-                if (keysPressed['ArrowDown']) soulPos.y += speed;
-                if (keysPressed['ArrowLeft']) soulPos.x -= speed;
-                if (keysPressed['ArrowRight']) soulPos.x += speed;
-            } else {
-                // Alma Azul (Afetada pela Gravidade do Sans)
-                if (soulPos.gravity === 'DOWN') {
-                    soulPos.vy += gForce; soulPos.y += soulPos.vy;
-                    if (keysPressed['ArrowLeft']) soulPos.x -= speed;
-                    if (keysPressed['ArrowRight']) soulPos.x += speed;
-                    if (keysPressed['ArrowUp'] && soulPos.y >= 180) soulPos.vy = -8; // Pulo
-                }
-                else if (soulPos.gravity === 'UP') {
-                    soulPos.vy -= gForce; soulPos.y += soulPos.vy;
-                    if (keysPressed['ArrowLeft']) soulPos.x -= speed;
-                    if (keysPressed['ArrowRight']) soulPos.x += speed;
-                    if (keysPressed['ArrowDown'] && soulPos.y <= 10) soulPos.vy = 8;
-                }
-                else if (soulPos.gravity === 'LEFT') {
-                    soulPos.vx -= gForce; soulPos.x += soulPos.vx;
-                    if (keysPressed['ArrowUp']) soulPos.y -= speed;
-                    if (keysPressed['ArrowDown']) soulPos.y += speed;
-                    if (keysPressed['ArrowRight'] && soulPos.x <= 10) soulPos.vx = 8;
-                }
-                else if (soulPos.gravity === 'RIGHT') {
-                    soulPos.vx += gForce; soulPos.x += soulPos.vx;
-                    if (keysPressed['ArrowUp']) soulPos.y -= speed;
-                    if (keysPressed['ArrowDown']) soulPos.y += speed;
-                    if (keysPressed['ArrowLeft'] && soulPos.x >= 560) soulPos.vx = -8;
+                    // Movimento lateral na gravidade azul
+                    if (gravity.y !== 0) {
+                        if (keys['ArrowLeft']) soul.x -= soul.speed;
+                        if (keys['ArrowRight']) soul.x += soul.speed;
+                    } else if (gravity.x !== 0) {
+                        if (keys['ArrowUp']) soul.y -= soul.speed;
+                        if (keys['ArrowDown']) soul.y += soul.speed;
+                    }
                 }
             }
 
-            // Limites da Arena (Caixa 600x220)
-            if (soulPos.x < 10) { soulPos.x = 10; soulPos.vx = 0; }
-            if (soulPos.x > 560) { soulPos.x = 560; soulPos.vx = 0; }
-            if (soulPos.y < 10) { soulPos.y = 10; soulPos.vy = 0; }
-            if (soulPos.y > 180) { soulPos.y = 180; soulPos.vy = 0; }
+            // Aplica velocidades e atrito
+            if (isBlue) {
+                soul.x += soul.vx;
+                soul.y += soul.vy;
+            }
 
-            soul.style.left = `${soulPos.x}px`;
-            soul.style.top = `${soulPos.y}px`;
+            // Colisões com as paredes da Arena (280x280)
+            if (soul.x < 0) { soul.x = 0; soul.vx = 0; }
+            if (soul.y < 0) { soul.y = 0; soul.vy = 0; }
+            if (soul.x > 280 - soul.size) { soul.x = 280 - soul.size; soul.vx = 0; }
+            if (soul.y > 280 - soul.size) { soul.y = 280 - soul.size; soul.vy = 0; }
+
+            let soulEl = document.getElementById('player-soul');
+            soulEl.style.left = soul.x + 'px';
+            soulEl.style.top = soul.y + 'px';
+
+            requestAnimationFrame(updateArena);
         }
 
-        /* ================= MECÂNICAS DE ATAQUE DO SANS ================= */
-        function applyBlueGravity(dir) {
-            sendSyncEvent({ type: 'SANS_ATTACK', attackType: 'GRAVITY', dir: dir });
-            executeBlueGravity(dir);
+        /* ================= HABILIDADES DO SANS ================= */
+        function slamSoul(dir) {
+            isBlue = true;
+            document.getElementById('player-soul').classList.add('soul-blue');
+            gravity = {x:0, y:0};
+            soul.vx = 0; soul.vy = 0;
+            let slamForce = 15;
+
+            if (dir === 'w') { gravity.y = -1; soul.vy = -slamForce; }
+            if (dir === 's') { gravity.y = 1; soul.vy = slamForce; }
+            if (dir === 'a') { gravity.x = -1; soul.vx = -slamForce; }
+            if (dir === 'd') { gravity.x = 1; soul.vx = slamForce; }
         }
 
-        function executeBlueGravity(dir) {
-            const soul = document.getElementById('battle-soul');
-            soulPos.isBlue = true;
-            soulPos.gravity = dir;
-            soul.style.filter = 'hue-rotate(240deg) saturate(3)'; // Fica azul
+        function spawnBoneAttack(dir) {
+            let arena = document.getElementById('arena-container');
+            let warn = document.createElement('div');
+            warn.className = 'warning-box';
+            warn.innerText = '!';
             
-            // Impulso inicial na direção da gravidade
-            if (dir === 'DOWN') soulPos.vy = 10;
-            if (dir === 'UP') soulPos.vy = -10;
-            if (dir === 'LEFT') soulPos.vx = -10;
-            if (dir === 'RIGHT') soulPos.vx = 10;
-        }
+            let bone = document.createElement('img');
+            bone.src = 'BoneOutline.png';
+            bone.className = 'bone-attack';
 
-        function triggerBoneAttack(dir) {
-            sendSyncEvent({ type: 'SANS_ATTACK', attackType: 'BONES', dir: dir });
-            executeBoneAttack(dir);
-        }
+            if (dir === 's') { warn.style.bottom = '0'; warn.style.width = '100%'; warn.style.height = '40px'; bone.style.bottom = '-100px'; bone.style.left = '130px'; }
+            if (dir === 'w') { warn.style.top = '0'; warn.style.width = '100%'; warn.style.height = '40px'; bone.style.top = '-100px'; bone.style.left = '130px'; }
+            if (dir === 'a') { warn.style.left = '0'; warn.style.width = '40px'; warn.style.height = '100%'; bone.style.left = '-100px'; bone.style.top = '90px'; bone.style.transform = 'rotate(90deg)';}
+            if (dir === 'd') { warn.style.right = '0'; warn.style.width = '40px'; warn.style.height = '100%'; bone.style.right = '-100px'; bone.style.top = '90px'; bone.style.transform = 'rotate(90deg)';}
 
-        function executeBoneAttack(dir) {
-            const box = document.getElementById('arena-box');
-            const warn = document.getElementById('warning-box');
-
-            // Configura Caixa de Aviso (!)
-            warn.style.display = 'flex';
-            if (dir === 'DOWN') { warn.style.bottom = '0'; warn.style.left = '0'; warn.style.width = '100%'; warn.style.height = '35px'; warn.style.top = 'auto'; }
-            if (dir === 'UP') { warn.style.top = '0'; warn.style.left = '0'; warn.style.width = '100%'; warn.style.height = '35px'; warn.style.bottom = 'auto'; }
-            if (dir === 'LEFT') { warn.style.top = '0'; warn.style.left = '0'; warn.style.width = '35px'; warn.style.height = '100%'; warn.style.right = 'auto'; }
-            if (dir === 'RIGHT') { warn.style.top = '0'; warn.style.right = '0'; warn.style.width = '35px'; warn.style.height = '100%'; warn.style.left = 'auto'; }
-
+            arena.appendChild(warn);
+            
             setTimeout(() => {
-                warn.style.display = 'none';
-                // Cria os Ossos
-                const bones = document.createElement('div');
-                bones.className = 'bone-attack';
-                if (dir === 'DOWN') { bones.style.bottom = '0'; bones.style.left = '0'; bones.style.width = '100%'; bones.style.height = '30px'; }
-                if (dir === 'UP') { bones.style.top = '0'; bones.style.left = '0'; bones.style.width = '100%'; bones.style.height = '30px'; }
-                if (dir === 'LEFT') { bones.style.top = '0'; bones.style.left = '0'; bones.style.width = '30px'; bones.style.height = '100%'; }
-                if (dir === 'RIGHT') { bones.style.top = '0'; bones.style.right = '0'; bones.style.width = '30px'; bones.style.height = '100%'; }
-                
-                box.appendChild(bones);
-                setTimeout(() => bones.remove(), 1200);
-            }, 600);
+                warn.remove();
+                arena.appendChild(bone);
+                let moveInterval = setInterval(() => {
+                    if (dir === 's') bone.style.bottom = (parseInt(bone.style.bottom || 0) + 15) + 'px';
+                    if (dir === 'w') bone.style.top = (parseInt(bone.style.top || 0) + 15) + 'px';
+                    if (dir === 'a') bone.style.left = (parseInt(bone.style.left || 0) + 15) + 'px';
+                    if (dir === 'd') bone.style.right = (parseInt(bone.style.right || 0) + 15) + 'px';
+                }, 30);
+                setTimeout(() => { clearInterval(moveInterval); bone.remove(); }, 1000);
+            }, 500);
         }
 
-        function triggerGasterBlaster() {
-            const targetX = soulPos.x;
-            const targetY = soulPos.y;
-            sendSyncEvent({ type: 'SANS_ATTACK', attackType: 'BLASTER', targetX: targetX, targetY: targetY });
-            executeGasterBlaster(targetX, targetY);
-        }
-
-        function executeGasterBlaster(targetX, targetY) {
-            const box = document.getElementById('arena-box');
-            const blaster = document.createElement('div');
+        function spawnGasterBlaster() {
+            let arena = document.getElementById('arena-container');
+            let blaster = document.createElement('img');
             blaster.className = 'gaster-blaster';
             
-            // Posiciona ao redor do alvo aleatoriamente
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 100;
-            const bx = targetX + Math.cos(angle) * radius;
-            const by = targetY + Math.sin(angle) * radius;
-            
-            blaster.style.left = `${bx}px`;
-            blaster.style.top = `${by}px`;
-            box.appendChild(blaster);
+            // Posição Aleatória Fora da Arena
+            let side = Math.floor(Math.random() * 4);
+            let tx = soul.x, ty = soul.y; // Mira onde a alma está
+            let bx, by, angle;
 
-            // Animação dos Sprites (1 a 5)
+            if (side===0) { bx = tx; by = -80; angle = 180; } // Topo
+            else if (side===1) { bx = tx; by = 300; angle = 0; } // Fundo
+            else if (side===2) { bx = -80; by = ty; angle = 90; } // Esquerda
+            else { bx = 300; by = ty; angle = -90; } // Direita
+
+            blaster.style.left = bx + 'px';
+            blaster.style.top = by + 'px';
+            blaster.style.transform = `rotate(${angle}deg)`;
+            arena.appendChild(blaster);
+
+            // Animação 1 ao 5
             let frame = 1;
-            const anim = setInterval(() => {
-                blaster.style.backgroundImage = `url('Gaster blaster ${frame}.png')`;
+            let anim = setInterval(() => {
+                blaster.src = `Gaster blaster ${frame}.png`;
                 frame++;
-                if (frame > 5) {
+                if(frame > 5) {
                     clearInterval(anim);
-                    // Dispara o Feixe de Luz
-                    const beam = document.createElement('div');
-                    beam.className = 'blaster-beam';
-                    beam.style.left = `${targetX - 100}px`; beam.style.top = `${targetY - 15}px`;
-                    beam.style.width = '300px'; beam.style.height = '30px'; beam.style.display = 'block';
-                    box.appendChild(beam);
-
+                    // Dispara o raio
+                    let beam = document.createElement('div');
+                    beam.className = 'gaster-beam';
+                    if(side===0 || side===1) { beam.style.width = '30px'; beam.style.height = '400px'; beam.style.left = (bx+15)+'px'; beam.style.top = '-50px'; }
+                    else { beam.style.width = '400px'; beam.style.height = '30px'; beam.style.top = (by+15)+'px'; beam.style.left = '-50px'; }
+                    arena.appendChild(beam);
+                    
                     setTimeout(() => { beam.remove(); blaster.remove(); }, 400);
                 }
             }, 80);
         }
 
-        function handleRemoteSansAttack(data) {
-            if (data.attackType === 'GRAVITY') executeBlueGravity(data.dir);
-            if (data.attackType === 'BONES') executeBoneAttack(data.dir);
-            if (data.attackType === 'BLASTER') executeGasterBlaster(data.targetX, data.targetY);
+        /* ================= TRANSIÇÕES DE TURNO ================= */
+        function triggerQTE() {
+            document.getElementById('img-LUTAR').src = 'f1.png';
+            setTimeout(() => {
+                document.getElementById('img-LUTAR').src = 'f0.png';
+                document.getElementById('sans-battle-sprite').classList.add('sans-dodging');
+                setTimeout(() => {
+                    document.getElementById('sans-battle-sprite').classList.remove('sans-dodging');
+                    triggerSansTurn();
+                }, 1000);
+            }, 500);
         }
 
-        function adjustSansTime(seconds) {
-            gameState.sansTurnTimer += seconds;
-            if (gameState.sansTurnTimer < 1) gameState.sansTurnTimer = 1;
-        }
+        function triggerSansTurn() {
+            gameState.phase = 'SANS_TURN';
+            document.getElementById('dialogue-box').style.display = 'none';
+            document.getElementById('arena-container').style.display = 'block';
+            
+            // Centraliza a alma
+            soul.x = 132; soul.y = 132; 
+            isBlue = false;
+            document.getElementById('player-soul').classList.remove('soul-blue');
 
-        function endSansTurn() {
-            clearInterval(soulLoop);
-            document.getElementById('battle-soul').style.display = 'none';
-            document.getElementById('battle-text').style.display = 'block';
-            document.getElementById('battle-text').innerHTML = `* O turno de ataque do Sans terminou.<br>* As Almas preparam seu contra-ataque...`;
-            document.getElementById('sans-gm-controls').style.display = 'none';
-            setTimeout(() => startVotingPhase(), 2000);
-        }
+            if (playerState.role === 'sans') {
+                document.getElementById('sans-gm-controls').style.display = 'block';
+            }
 
-        updateMenuState();
+            requestAnimationFrame(updateArena);
+
+            // Turno dura 10 segundos para testar
+            setTimeout(() => {
+                gameState.phase = 'VOTING';
+                document.getElementById('arena-container').style.display = 'none';
+                document.getElementById('sans-gm-controls').style.display = 'none';
+                document.getElementById('dialogue-box').style.display = 'flex';
+                document.getElementById('battle-text').innerHTML = "* O turno acabou. O que você vai fazer?";
+            }, 10000);
+        }
     </script>
 </body>
 </html>
